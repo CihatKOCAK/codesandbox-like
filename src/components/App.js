@@ -1,34 +1,61 @@
-import React, { useState } from "react";
-import { CodeEditor } from ".";
+import React, { useState, useEffect } from "react";
+import useLocalStorage from "../hooks/useLocalStorage";
+import Editor from "./Editor";
 
 function App() {
-  const [code, setCode] = useState("");
-  const [output, setOutput] = useState("");
-  const [error, setError] = useState("");
+  const [html, setHtml] = useLocalStorage("html", "");
+  const [css, setCss] = useLocalStorage("css", "");
+  const [js, setJs] = useLocalStorage("js", "");
+  const handleHtmlChange = (newValue) => {
+    setHtml(newValue);
+  };
 
-  const runCode = () => {
-    try {
-      // evaluate user code in a sandboxed environment
-      const output = eval(`
-        (function() {
-          ${code}
-        })()
-      `);
-      setOutput(output);
-      setError("");
-    } catch (err) {
-      setError(err.message);
-      setOutput("");
-    }
+  const handleResetClick = () => {
+    setHtml("");
+    setCss("");
+    setJs("");
   };
 
   return (
-    <div>
-      <CodeEditor code={code} setCode={setCode} />
-      <button onClick={runCode}>Run</button>
-      {output && <div>Output: {output.toString()}</div>}
-      {error && <div>Error: {error.toString()}</div>}
-    </div>
+    <>
+      <div className="pane top-pane">
+      <Editor
+        language="xml"
+        displayName="HTML"
+        value={html}
+        onChange={handleHtmlChange}
+      />
+       <Editor
+        language="css"
+        displayName="CSS"
+        value={css}
+        onChange={(newValue) => setCss(newValue)}
+      />
+        <Editor
+        language="javascript"
+        displayName="JS"
+        value={js}
+        onChange={(newValue) => setJs(newValue)}
+      />
+      </div>
+      <button className="reset-btn" onClick={handleResetClick}>Reset</button>
+      <div className="pane">
+      <iframe
+        srcDoc={`
+          <html>
+            <body>${html}</body>
+            <style>${css}</style>
+            <script>${js}</script>
+          </html>
+        `}
+        title="output"
+        sandbox="allow-scripts"
+        frameBorder="0"
+        width="100%"
+        height="100%"
+      />
+      </div>
+    </>
   );
 }
 
